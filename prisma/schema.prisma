@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+
+  categories   Category[]
+  transactions Transaction[]
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions Transaction[]
+
+  @@unique([userId, name]) // evita categoria duplicada pro mesmo usuário
+}
+
+model Transaction {
+  id              String          @id @default(cuid())
+  type            TransactionType
+  amount          Decimal        
+  date            DateTime
+  description     String?
+  createdAt       DateTime        @default(now())
+  
+
+  // categoria (opcional)
+  categoryId      String?
+  category        Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  // cartão
+  isCreditCard    Boolean         @default(false)
+  cardLabel       String?
+
+  // recorrência (MVP simples: gerar N lançamentos e amarrar no groupId)
+  recurrenceGroupId String?
+  recurrenceCount   Int?
+
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, categoryId])
+  @@index([userId, isCreditCard])
+  @@index([userId, recurrenceGroupId])
+}
