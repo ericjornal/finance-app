@@ -16,9 +16,6 @@ import {
   Legend,
 } from "recharts";
 
-// Protótipo INTERATIVO para preview no Canvas.
-// Não usa backend/banco: simula login e dados em memória.
-// A estrutura e UX espelham o app real (Next.js + API + Postgres).
 
 const initialCategories = [
   { id: "c1", name: "Moradia" },
@@ -70,7 +67,7 @@ type TxType = "EXPENSE" | "INCOME";
 
 type Recurrence = {
   enabled: boolean;
-  frequency: "MONTHLY"; // mantemos simples no protótipo
+  frequency: "MONTHLY"; 
   count: number; // número de meses (inclui o mês atual)
 };
 
@@ -356,9 +353,7 @@ function AuthScreen({ onLogin, onSignup }: any) {
   const title = mode === "login" ? "Entrar" : "Criar conta";
   const subtitle =
     mode === "login"
-      ? "Preview do app (modo protótipo). No app real, isso usa banco + sessão."
-      : "Cria usuário (simulado). No app real, isso cria no Postgres.";
-
+     
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md rounded-2xl border bg-white shadow-sm p-6 space-y-4">
@@ -394,10 +389,7 @@ function AuthScreen({ onLogin, onSignup }: any) {
         </div>
 
         <div className="pt-4 border-t text-xs text-gray-500 space-y-1">
-          <div>
-            <b>Dica:</b> no protótipo, qualquer email/senha entra.
-          </div>
-          <div>Depois eu transformo isso no app real (NextAuth + Prisma + Vercel).</div>
+           
         </div>
       </div>
     </div>
@@ -585,7 +577,7 @@ function Dashboard({ userEmail, onLogout }: any) {
           <div>
             <div className="text-2xl font-semibold">Controle Financeiro</div>
             <div className="text-sm text-gray-600 mt-1">
-              Usuário: <span className="font-medium">{userEmail}</span> · <Pill>Preview</Pill>
+              Usuário: <span className="font-medium">{userEmail}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -982,36 +974,37 @@ function TransactionModal({ open, onClose, categories, editing, onSaveMany }: an
         ) : null}
 
         {isRecurring ? (
-          <div className="sm:col-span-2 rounded-2xl border bg-gray-50 p-3">
-            <div className="text-sm font-semibold">Recorrência</div>
-            {recurrenceDisabledByEdit ? (
-              <div className="text-xs text-gray-600 mt-1">
-                Este lançamento faz parte de uma <b>série já criada</b>. No protótipo, a edição da série não está disponível.
-                <br />
-                (No app real, teremos uma tela de “Recorrências” para editar/pausar.)
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                <Select label="Frequência" value="MONTHLY" onChange={() => {}} disabled>
-                  <option value="MONTHLY">Mensal</option>
-                </Select>
+  <div className="sm:col-span-2 rounded-2xl border bg-gray-50 p-3">
+    <div className="text-sm font-semibold">Recorrência</div>
 
-                <Input
-                  label="Por quantos meses?"
-                  type="number"
-                  min={1}
-                  max={120}
-                  value={recurrenceCount}
-                  onChange={(e: any) => setRecurrenceCount(Number(e.target.value))}
-                />
+    {recurrenceDisabledByEdit ? (
+      <div className="text-xs text-gray-600 mt-1">
+        Este lançamento faz parte de uma <b>série já criada</b>. No protótipo, a edição da série não está disponível.
+        <br />
+        (No app real, teremos uma tela de “Recorrências” para editar/pausar.)
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+        <Select label="Frequência" value="MONTHLY" onChange={() => {}} disabled>
+          <option value="MONTHLY">Mensal</option>
+        </Select>
 
-                <div className="sm:col-span-2 text-xs text-gray-600">
-                  Serão gerados {Math.max(1, Number(recurrenceCount) || 1)} lançamentos (inclui o mês desta data).
-                </div>
-              </div>
-            )}
-          </div>
-        ) : null}
+        <Input
+          label="Por quantos meses?"
+          type="number"
+          min={1}
+          max={120}
+          value={recurrenceCount}
+          onChange={(e: any) => setRecurrenceCount(Number(e.target.value))}
+        />
+
+        <div className="sm:col-span-2 text-xs text-gray-600">
+          Serão gerados {Math.max(1, Number(recurrenceCount) || 1)} lançamentos (inclui o mês desta data).
+        </div>
+      </div>
+    )}
+  </div>
+) : null}
       </div>
 
       <div className="flex justify-end gap-2 mt-4">
