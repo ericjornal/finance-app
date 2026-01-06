@@ -406,52 +406,8 @@ function AuthScreen({ onLogin, onSignup }: any) {
 
 function Dashboard({ userEmail, onLogout }: any) {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
-const [transactions, setTransactions] = useState<Tx[]>([]);
-
-const [loading, setLoading] = useState(false);
-
-async function fetchJSON(url: string, options?: RequestInit) {
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options?.headers ?? {}),
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Erro HTTP ${res.status}`);
-  }
-
-  return res.json();
-}
-
-async function loadCategories() {
-  const data = await fetchJSON("/api/categories");
-  setCategories(data);
-}
-
-async function loadTransactions() {
-  // Monta a URL com filtros
-  const params = new URLSearchParams();
-  params.set("month", month);
-
-  if (categoryId) params.set("categoryId", categoryId);
-  if (filterCreditOnly) params.set("isCreditCard", "true");
-  if (filterRecurringOnly) params.set("isRecurring", "true");
-
-  const data = await fetchJSON(`/api/transactions?${params.toString()}`);
-
-  // Ajuste: API vai retornar dates como ISO. Vamos converter para "YYYY-MM-DD"
-  const normalized = (data ?? []).map((t: any) => ({
-    ...t,
-    date: String(t.date).slice(0, 10),
-    amount: Number(t.amount),
-  }));
-
-  setTransactions(normalized);
-}
+  const [transactions, setTransactions] = useState<Tx[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const [month, setMonth] = useState("2026-01");
   const [categoryId, setCategoryId] = useState<string>("");
@@ -460,84 +416,70 @@ async function loadTransactions() {
 
   const [openTx, setOpenTx] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-
   const [openCats, setOpenCats] = useState(false);
 
-  useEffect(() => {
-  (async () => {
-    try {
-      setLoading(true);
-      await loadCategories();
-    } finally {
-      setLoading(false);
+  async function fetchJSON(url: string, options?: RequestInit) {
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options?.headers ?? {}),
+      },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || `Erro HTTP ${res.status}`);
     }
-  })();
-}, []);
 
-useEffect(() => {
-  (async () => {
-    try {
-      setLoading(true);
-      await loadTransactions();
-    } finally {
-      setLoading(false);
-    }
-  })();
-  // Recarrega quando mudar mês/filtros
-}, [month, categoryId, filterCreditOnly, filterRecurringOnly]);
-
-async function fetchJSON(url: string, options?: RequestInit) {
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options?.headers ?? {}),
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Erro HTTP ${res.status}`);
+    return res.json();
   }
 
-  return res.json();
-}
+  async function loadCategories() {
+    const data = await fetchJSON("/api/categories");
+    setCategories(data);
+  }
 
-async function loadCategories() {
-  const data = await fetchJSON("/api/categories");
-  setCategories(data);
-}
+  async function loadTransactions() {
+    const params = new URLSearchParams();
+    params.set("month", month);
 
-async function loadTransactions() {
-  const params = new URLSearchParams();
-  params.set("month", month);
+    if (categoryId) params.set("categoryId", categoryId);
+    if (filterCreditOnly) params.set("isCreditCard", "true");
+    if (filterRecurringOnly) params.set("isRecurring", "true");
 
-  if (categoryId) params.set("categoryId", categoryId);
-  if (filterCreditOnly) params.set("isCreditCard", "true");
-  if (filterRecurringOnly) params.set("isRecurring", "true");
+    const data = await fetchJSON(`/api/transactions?${params.toString()}`);
 
-  const data = await fetchJSON(`/api/transactions?${params.toString()}`);
+    const normalized = (data ?? []).map((t: any) => ({
+      ...t,
+      date: String(t.date).slice(0, 10),
+      amount: Number(t.amount),
+    }));
 
-  const normalized = (data ?? []).map((t: any) => ({
-    ...t,
-    // Prisma devolve date como ISO -> pegamos só YYYY-MM-DD
-    date: String(t.date).slice(0, 10),
-    amount: Number(t.amount),
-  }));
+    setTransactions(normalized);
+  }
 
-  setTransactions(normalized);
-}
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        await loadCategories();
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
-useEffect(() => {
-  // carrega categorias na primeira vez que abrir o Dashboard
-  loadCategories().catch(console.error);
-}, []);
-
-useEffect(() => {
-  // recarrega os lançamentos sempre que mudar mês/filtros
-  loadTransactions().catch(console.error);
-}, [month, categoryId, filterCreditOnly, filterRecurringOnly]);
-
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        await loadTransactions();
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [month, categoryId, filterCreditOnly, filterRecurringOnly]);
 
   const stats = useMemo(() => buildStats(transactions, categories, month, categoryId), [transactions, categories, month, categoryId]);
 
